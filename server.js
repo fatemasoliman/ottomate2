@@ -94,6 +94,11 @@ async function loadCookies() {
   }
 }
 
+// Move this BEFORE serving static files and the catchall handler
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
+});
+
 // 3. API Routes
 app.get('/cookie-status', (req, res) => {
   res.json({
@@ -469,16 +474,16 @@ app.post('/automate', async (req, res) => {
   }
 });
 
-// 4. Serve static files from the React app
+// Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// 5. The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
+// The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
 // 6. Server startup and error handling
-const server = app.listen(port, () => {
+const server = app.listen(port, '::', () => {
   console.log(`Server running on port ${port}`);
 });
 
