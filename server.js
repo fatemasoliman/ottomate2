@@ -49,10 +49,18 @@ function wait(ms) {
 
 async function initBrowser() {
   if (!browser) {
-    browser = await puppeteer.launch({
+    const options = {
       headless: false,
-      args: ['--start-maximized']
-    });
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized'],
+      defaultViewport: null
+    };
+
+    // If we're in a production environment (like EC2), we might need to specify the Chrome path
+    if (process.env.NODE_ENV === 'production') {
+      options.executablePath = '/usr/bin/chromium-browser';  // Adjust this path if necessary
+    }
+
+    browser = await puppeteer.launch(options);
   }
   if (!page) {
     page = await browser.newPage();
