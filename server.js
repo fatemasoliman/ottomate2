@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 // 2. Middleware
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://your-ec2-public-ip'], // Update this
+  origin: ['http://localhost:3000', 'http://3.28.123.146'], // Update this
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -25,7 +25,9 @@ let cookies = null;
 const COOKIES_FILE = 'cookies.json';
 
 // Create WebSocket server
-const wss = new WebSocket.Server({ port: 3002 });
+const wss = new WebSocket.Server({ port: 3002 }, () => {
+  console.log('WebSocket server is running on port 3002');
+});
 
 wss.on('connection', (ws) => {
   console.log('WebSocket client connected');
