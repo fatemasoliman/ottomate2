@@ -11,12 +11,11 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// CORS configuration
+// 2. Middleware
 app.use(cors({
-  origin: 'http://localhost:3001', // Update this to match your React app's URL
+  origin: ['http://localhost:3001', 'http://your-ec2-public-ip'], // Update this
   credentials: true
 }));
-
 app.use(bodyParser.json());
 
 let browser = null;
@@ -86,6 +85,14 @@ async function loadCookies() {
     return false;
   }
 }
+
+// 3. API Routes
+app.get('/cookie-status', (req, res) => {
+  res.json({
+    cookiesExist: !!cookies && cookies.length > 0,
+    cookieCount: cookies ? cookies.length : 0
+  });
+});
 
 app.post('/manual-login', async (req, res) => {
   try {
@@ -454,14 +461,15 @@ app.post('/automate', async (req, res) => {
   }
 });
 
-// Serve static files from the React app
+// 4. Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
+// 5. The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
+// 6. Server startup and error handling
 const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
@@ -491,13 +499,6 @@ process.on('SIGINT', async () => {
     await browser.close();
   }
   process.exit();
-});
-
-app.get('/cookie-status', (req, res) => {
-  res.json({
-    cookiesExist: !!cookies && cookies.length > 0,
-    cookieCount: cookies ? cookies.length : 0
-  });
 });
 
 // Global error handler
