@@ -35,6 +35,7 @@ function App() {
   const serverPort = 3000;
   const [logs, setLogs] = useState([]);
   const wsRef = useRef(null);
+  const iframeRef = useRef(null);
 
   useEffect(() => {
     wsRef.current = new WebSocket(WS_URL);
@@ -52,12 +53,14 @@ function App() {
 
   const handleManualLogin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/manual-login`, { url, skipLogin });
-      console.log('Manual login response:', response.data);
+      // Load the URL in an iframe
+      if (iframeRef.current) {
+        iframeRef.current.src = url;
+      }
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Error during manual login:', error);
-      setError(`Manual login error: ${error.message}\n${JSON.stringify(error.response?.data, null, 2)}`);
+      setError(`Manual login error: ${error.message}`);
     }
   };
 
@@ -69,51 +72,13 @@ function App() {
     try {
       let parsedActions = JSON.parse(actions);
       console.log('Sending automation request with actions:', parsedActions);
-      const response = await axios.post(`${API_URL}/automate`, {
-        url,
-        actions: parsedActions,
-        speed: automationSpeed
-      });
-      console.log('Automation response:', response.data);
-      setResult(JSON.stringify(response.data, null, 2));
-      
-      // Display screenshot if available
-      if (response.data.screenshot) {
-        const screenshotDiv = document.getElementById('screenshot');
-        if (screenshotDiv) {
-          const img = document.createElement('img');
-          img.src = `data:image/png;base64,${response.data.screenshot}`;
-          screenshotDiv.innerHTML = '';
-          screenshotDiv.appendChild(img);
-        } else {
-          console.warn('Screenshot div not found');
-        }
-      }
+      // Implement client-side automation here
+      // You'll need to inject a script into the iframe to perform the actions
+      // This is a complex task and may require additional libraries or custom implementation
+      setResult('Client-side automation not implemented in this example');
     } catch (error) {
       console.error('Error:', error);
-      let errorMessage = `Error: ${error.message}\n\n`;
-      if (error.response) {
-        errorMessage += `Status: ${error.response.status}\n`;
-        // Omit the screenshot from the error data
-        const errorData = { ...error.response.data };
-        delete errorData.screenshot;
-        errorMessage += `Data: ${JSON.stringify(errorData, null, 2)}\n\n`;
-      }
-      errorMessage += `Stack: ${error.stack}`;
-      setError(errorMessage);
-      
-      // Display error screenshot if available
-      if (error.response?.data?.screenshot) {
-        const screenshotDiv = document.getElementById('screenshot');
-        if (screenshotDiv) {
-          const img = document.createElement('img');
-          img.src = `data:image/png;base64,${error.response.data.screenshot}`;
-          screenshotDiv.innerHTML = '';
-          screenshotDiv.appendChild(img);
-        } else {
-          console.warn('Screenshot div not found');
-        }
-      }
+      setError(`Error: ${error.message}`);
     }
   };
 
@@ -144,71 +109,69 @@ function App() {
               placeholder="Enter portal URL"
               className="input-field"
             />
-            <div className="checkbox-container">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={skipLogin}
-                  onChange={(e) => setSkipLogin(e.target.checked)}
-                />
-                Skip login (for public websites)
-              </label>
-            </div>
             <button onClick={handleManualLogin} className="button">
-              {skipLogin ? 'Load Public Page' : 'Start Manual Login'}
+              Load Page
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="automation-form">
-            <div className="form-group">
-              <label htmlFor="url">URL:</label>
-              <input
-                type="text"
-                id="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                required
-                className="input-field"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="actions">Actions (JSON):</label>
-              <textarea
-                id="actions"
-                value={actions}
-                onChange={(e) => setActions(e.target.value)}
-                required
-                className="textarea-field"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="file-upload">Or upload JSON file:</label>
-              <input
-                type="file"
-                id="file-upload"
-                accept=".json"
-                onChange={handleFileUpload}
-                className="file-input"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="speed-slider">Automation Speed:</label>
-              <div className="slider-container">
+          <>
+            <iframe
+              ref={iframeRef}
+              src={url}
+              style={{width: '100%', height: '500px', border: '1px solid #ccc'}}
+              title="Login Page"
+            />
+            <form onSubmit={handleSubmit} className="automation-form">
+              <div className="form-group">
+                <label htmlFor="url">URL:</label>
                 <input
-                  type="range"
-                  id="speed-slider"
-                  min="1"
-                  max="4"
-                  step="0.1"
-                  value={automationSpeed}
-                  onChange={(e) => setAutomationSpeed(parseFloat(e.target.value))}
-                  className="slider"
+                  type="text"
+                  id="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  required
+                  className="input-field"
                 />
-                <span className="slider-value">{automationSpeed.toFixed(1)}x</span>
               </div>
-            </div>
-            <button type="submit" className="button">Run Automation</button>
-          </form>
+              <div className="form-group">
+                <label htmlFor="actions">Actions (JSON):</label>
+                <textarea
+                  id="actions"
+                  value={actions}
+                  onChange={(e) => setActions(e.target.value)}
+                  required
+                  className="textarea-field"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="file-upload">Or upload JSON file:</label>
+                <input
+                  type="file"
+                  id="file-upload"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="file-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="speed-slider">Automation Speed:</label>
+                <div className="slider-container">
+                  <input
+                    type="range"
+                    id="speed-slider"
+                    min="1"
+                    max="4"
+                    step="0.1"
+                    value={automationSpeed}
+                    onChange={(e) => setAutomationSpeed(parseFloat(e.target.value))}
+                    className="slider"
+                  />
+                  <span className="slider-value">{automationSpeed.toFixed(1)}x</span>
+                </div>
+              </div>
+              <button type="submit" className="button">Run Automation</button>
+            </form>
+          </>
         )}
         {error && (
           <div className="error-section">
