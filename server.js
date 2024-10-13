@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 // 2. Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://3.28.123.146'], // Update this
+  origin: ['http://localhost:3000', 'http://3.28.123.146', 'http://3.28.123.146:3000'],
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -485,7 +485,7 @@ app.get('*', (req, res) => {
 });
 
 // 6. Server startup and error handling
-const server = app.listen(port, '::', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
 

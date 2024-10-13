@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css'; // Make sure to create this CSS file
 
+const API_URL = 'http://3.28.123.146:3000';
+const WS_URL = 'ws://3.28.123.146:3002';
+
 function App() {
   const [url, setUrl] = useState('https://ops.trella.app/loadboard/shp7ac748256d2b60a4');
   const [actions, setActions] = useState(JSON.stringify([
@@ -34,7 +37,7 @@ function App() {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    wsRef.current = new WebSocket('ws://localhost:3002');
+    wsRef.current = new WebSocket(WS_URL);
     wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setLogs(prevLogs => [...prevLogs, data]);
@@ -49,7 +52,7 @@ function App() {
 
   const handleManualLogin = async () => {
     try {
-      const response = await axios.post(`http://localhost:${serverPort}/manual-login`, { url, skipLogin });
+      const response = await axios.post(`${API_URL}/manual-login`, { url, skipLogin });
       console.log('Manual login response:', response.data);
       setIsLoggedIn(true);
     } catch (error) {
@@ -66,7 +69,7 @@ function App() {
     try {
       let parsedActions = JSON.parse(actions);
       console.log('Sending automation request with actions:', parsedActions);
-      const response = await axios.post(`http://localhost:${serverPort}/automate`, {
+      const response = await axios.post(`${API_URL}/automate`, {
         url,
         actions: parsedActions,
         speed: automationSpeed
@@ -129,7 +132,6 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>OttoMate</h1>
-        <p>Web Interaction Automation</p>
       </header>
       <main className="App-main">
         {!isLoggedIn ? (
