@@ -1,3 +1,6 @@
-.env
+git .env
 google_client_secret.json
 screenshots/
+node_modules
+node_modules
+ottomate.pem
